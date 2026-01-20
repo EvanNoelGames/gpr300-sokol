@@ -11,10 +11,24 @@
 // batteries
 #include "batteries/opengl.h"
 
+struct {
+    float alpha = 1.0f;
+    float shininess = 1.0f;
+    glm::vec3 ambient = {0.5f, 0.5f, 0.5f};
+    glm::vec3 diffuse = {0.5f, 0.5f, 0.5f};;
+    glm::vec3 specular = {0.5f, 0.5f, 0.5f};;
+} debug;
+
 Scene::Scene()
 {
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
-    blinnphong = std::make_unique<ew::Shader>("assets/shaders/default.vs", "assets/shaders/default.fs");
+    blinnphong = std::make_unique<ew::Shader>("assets/shaders/default.vs", "assets/shaders/blinnphong.fs");
+
+    light = {
+        .brightness = 1.0f,
+        .color = {1.0f, 0.0f, 1.0f},
+        .position = {2.0f, 2.0f, 2.0f},
+    };
 }
 
 Scene::~Scene()
@@ -27,8 +41,6 @@ void Scene::Update(float dt)
 
     /* body */
 }
-
-auto matrix = glm::mat4(1.0f);
 
 void Scene::Render(void)
 {
@@ -45,9 +57,18 @@ void Scene::Render(void)
     blinnphong->use();
 
     // scene matrices
-    blinnphong->setMat4("model", matrix);
+    blinnphong->setMat4("model", glm::mat4(1.0f));
     blinnphong->setMat4("view_proj", view_proj);
-    blinnphong->setVec3("camera_position", camera.position);
+    
+    blinnphong->setVec3("camera", camera.position);
+    blinnphong->setVec3("light.position", light.position);
+    blinnphong->setVec3("light.color", light.color);
+
+    blinnphong->setVec3("material.ambient", debug.ambient);
+    blinnphong->setVec3("material.diffuse", debug.diffuse);
+    blinnphong->setVec3("material.specular", debug.specular);
+    blinnphong->setFloat("material.shininess", debug.shininess);
+    blinnphong->setFloat("material.alpha", debug.alpha);
 
     // draw suzanne
     suzanne->draw();
@@ -65,20 +86,34 @@ void Scene::Debug(void)
     
     ImGuizmo::DrawGrid(view, proj, glm::value_ptr(m), 100.0f);
 
+    auto light_matrix = glm::translate(glm::mat4(1.0f), light.position);
     ImGuizmo::Manipulate(
         view,
         proj,
-        ImGuizmo::ROTATE,
+        ImGuizmo::TRANSLATE,
         ImGuizmo::WORLD,
-        glm::value_ptr(matrix)
+        glm::value_ptr(light_matrix) // &light_matrix[0][0]
     );
+
+    if (ImGuizmo::IsUsing())
+    {
+        light.position = glm::vec3(light_matrix[3]);
+    }
 
     cameracontroller.Debug();
 
-    ImGui::Begin("Controlls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
     ImGui::Checkbox("Paused", &time.paused);
     ImGui::SliderFloat("Time Factor", &time.factor, 0.0f, 10.0f);
+
+    ImGui::ColorEdit3("Light Color", &light.color[0]);
+
+    ImGui::DragFloat3("Material Ambient", &debug.ambient[0], 1.0f, 0.0f, 1.0f);
+    ImGui::DragFloat3("Material Diffuse", &debug.diffuse[0], 1.0f, 0.0f, 1.0f);
+    ImGui::DragFloat3("Material Specular", &debug.specular[0], 1.0f, 0.0f, 1.0f);
+    ImGui::DragFloat("Material Shininess", &debug.shininess, 1.0f, 0.0f, 1.0f);
+    ImGui::DragFloat("Material Alpha", &debug.alpha, 1.0f, 0.0f, 1.0f);
 
     /* build debug ui here */
 
