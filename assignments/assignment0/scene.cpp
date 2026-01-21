@@ -14,7 +14,8 @@
 struct {
     float alpha = 1.0f;
     float shininess = 1.0f;
-    glm::vec3 ambient = {0.5f, 0.5f, 0.5f};
+    glm::vec3 material_color = {1.0f, 1.0f, 1.0f};
+    glm::vec3 ambient = {0.1f, 0.1f, 0.1f};
     glm::vec3 diffuse = {0.5f, 0.5f, 0.5f};;
     glm::vec3 specular = {0.5f, 0.5f, 0.5f};;
 } debug;
@@ -22,7 +23,7 @@ struct {
 Scene::Scene()
 {
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
-    blinnphong = std::make_unique<ew::Shader>("assets/shaders/default.vs", "assets/shaders/blinnphong.fs");
+    blinnphong = std::make_unique<ew::Shader>("assets/shaders/texture.vs", "assets/shaders/blinnphong.fs");
 
     light = {
         .brightness = 1.0f,
@@ -49,6 +50,9 @@ void Scene::Render(void)
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // bind texture
+    glBindTextureUnit(0, brickTexture.getID());
+
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glEnable(GL_DEPTH_TEST);
@@ -60,11 +64,13 @@ void Scene::Render(void)
     blinnphong->setMat4("model", glm::mat4(1.0f));
     blinnphong->setMat4("view_proj", view_proj);
     
+    blinnphong->setInt("texture2d", 0);
     blinnphong->setVec3("camera", camera.position);
     blinnphong->setVec3("light.position", light.position);
     blinnphong->setVec3("light.color", light.color);
 
     blinnphong->setVec3("material.ambient", debug.ambient);
+    blinnphong->setVec3("material.color", debug.material_color);
     blinnphong->setVec3("material.diffuse", debug.diffuse);
     blinnphong->setVec3("material.specular", debug.specular);
     blinnphong->setFloat("material.shininess", debug.shininess);
@@ -108,12 +114,13 @@ void Scene::Debug(void)
     ImGui::SliderFloat("Time Factor", &time.factor, 0.0f, 10.0f);
 
     ImGui::ColorEdit3("Light Color", &light.color[0]);
+    ImGui::ColorEdit3("Material Color", &debug.material_color[0]);
 
-    ImGui::DragFloat3("Material Ambient", &debug.ambient[0], 1.0f, 0.0f, 1.0f);
-    ImGui::DragFloat3("Material Diffuse", &debug.diffuse[0], 1.0f, 0.0f, 1.0f);
-    ImGui::DragFloat3("Material Specular", &debug.specular[0], 1.0f, 0.0f, 1.0f);
-    ImGui::DragFloat("Material Shininess", &debug.shininess, 1.0f, 0.0f, 1.0f);
-    ImGui::DragFloat("Material Alpha", &debug.alpha, 1.0f, 0.0f, 1.0f);
+    ImGui::DragFloat3("Material Ambient", &debug.ambient[0], 0.1f, 0.0f, 1.0f);
+    ImGui::DragFloat3("Material Diffuse", &debug.diffuse[0], 0.1f, 0.0f, 1.0f);
+    ImGui::DragFloat3("Material Specular", &debug.specular[0], 0.1f, 0.0f, 1.0f);
+    ImGui::DragFloat("Material Shininess", &debug.shininess, 0.1f, 0.0f, 1.0f);
+    //ImGui::DragFloat("Material Alpha", &debug.alpha, 0.1f, 0.0f, 1.0f);
 
     /* build debug ui here */
 

@@ -23,5 +23,7 @@ class Scene final : public batteries::Scene
     std::unique_ptr<ew::Model> suzanne;
     std::unique_ptr<ew::Shader> blinnphong;
 
+    ew::Texture brickTexture = ew::Texture("assets/textures/brick_small.jpg");
+
     batteries::light_t light;
 };
