@@ -3,6 +3,7 @@
 // batteries
 #include "batteries/scene.h"
 #include "batteries/lights.h"
+#include "batteries/opengl.h"
 
 // ew
 #include "ew/model.h"
@@ -20,17 +21,26 @@ class Scene final : public batteries::Scene
     void Debug(void);
 
   private:
-    std::unique_ptr<ew::Model> skull;
     std::unique_ptr<ew::Model> suzanne;
-    std::unique_ptr<ew::Shader> toon;
+    std::unique_ptr<ew::Shader> blinnphong;
 
-    ew::Texture brickTexture = ew::Texture("assets/textures/Txo_dokuo.png");
-    ew::Texture toonShadeTexture = ew::Texture("assets/textures/ZAtoon.png");
+    // post-processing
+    std::unique_ptr<ew::Shader> postprocess_blur;
+    std::unique_ptr<ew::Shader> postprocess_edgedetect;
+    std::unique_ptr<ew::Shader> postprocess_gray;
+    std::unique_ptr<ew::Shader> postprocess_invert;
+    std::unique_ptr<ew::Shader> postprocess_chromatic;
+    std::unique_ptr<ew::Shader> postprocess_sharpen;
+    std::unique_ptr<ew::Shader> postprocess_vignette;
+    std::unique_ptr<ew::Shader> postprocess_lensdistortion;
+    std::unique_ptr<ew::Shader> postprocess_filmgrain;
+    std::unique_ptr<ew::Shader> postprocess_gammacorrection;
+
+    ew::Texture brickTexture = ew::Texture("assets/textures/brick_small.jpg");
 
     batteries::light_t light;
 
-    struct {
-      glm::vec3 color1;
-      glm::vec3 color2;
-    } palette;
+    GLuint fbo;
+    GLuint fbo_texture;
+    GLuint fbo_depth;
 };
